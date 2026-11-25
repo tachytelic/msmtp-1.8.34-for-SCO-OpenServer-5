@@ -1,0 +1,7 @@
+work/
+msmtp-1.8.34/
+msmtp-1.8.34.tar.xz
+prebuilt/
+*.swp
+*~
+.DS_Store

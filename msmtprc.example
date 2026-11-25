@@ -1,0 +1,19 @@
+# /usr/local/etc/msmtprc - settings for every user of this system.
+# Replace the host, port, from, user and password with the ones your
+# mail service gives you for SMTP.
+
+defaults
+auth           on
+tls            on
+tls_starttls   on
+tls_trust_file /usr/local/etc/ssl/cert.pem
+logfile        /usr/adm/msmtp.log
+
+account        relay
+host           smtp.example.com
+port           587
+from           reports@example.com
+user           reports@example.com
+passwordeval   "cat /usr/local/etc/msmtp.pass"
+
+account default : relay

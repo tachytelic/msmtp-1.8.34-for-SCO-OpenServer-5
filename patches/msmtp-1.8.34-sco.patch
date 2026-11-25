@@ -1,0 +1,124 @@
+diff -ruN orig/msmtp-1.8.34/src/getopt.h msmtp-1.8.34/src/getopt.h
+--- orig/msmtp-1.8.34/src/getopt.h	1970-01-01 00:00:00.000000000 +0000
++++ msmtp-1.8.34/src/getopt.h	2026-11-25 18:08:45.522730194 +0000
+@@ -0,0 +1,21 @@
++/* getopt_long() for SCO OpenServer 5, whose C library has only getopt().
++ * The function itself comes from GCC libiberty (-liberty). */
++#ifndef SCO_GETOPT_H
++#define SCO_GETOPT_H
++#include <stdarg.h>
++#include <stdio.h>
++struct option {
++    const char *name;
++    int has_arg;
++    int *flag;
++    int val;
++};
++#define no_argument 0
++#define required_argument 1
++#define optional_argument 2
++extern char *optarg;
++extern int optind, opterr, optopt;
++int getopt_long(int argc, char *const *argv, const char *shortopts,
++        const struct option *longopts, int *longind);
++int vasprintf(char **result, const char *format, va_list args);
++#endif
+diff -ruN orig/msmtp-1.8.34/src/msgid.c msmtp-1.8.34/src/msgid.c
+--- orig/msmtp-1.8.34/src/msgid.c	2023-09-27 18:40:26.000000000 +0000
++++ msmtp-1.8.34/src/msgid.c	2026-11-25 18:08:09.279262264 +0000
+@@ -25,6 +25,30 @@
+ #include <stdlib.h>
+ 
+ #include "msgid.h"
++
++/* SCO OpenServer 5 has no clock_gettime(). The values only feed a hash that
++ * makes the Message-ID unique, so wall time and the tick count will do. */
++#ifndef CLOCK_REALTIME
++#include <sys/time.h>
++#include <sys/times.h>
++#define CLOCK_REALTIME 0
++#define CLOCK_BOOTTIME 1
++static int clock_gettime(int id, struct timespec *ts)
++{
++    if (id == CLOCK_REALTIME) {
++        struct timeval tv;
++        gettimeofday(&tv, NULL);
++        ts->tv_sec = tv.tv_sec;
++        ts->tv_nsec = tv.tv_usec * 1000;
++    } else {
++        struct tms t;
++        clock_t c = times(&t);
++        ts->tv_sec = c / 100;
++        ts->tv_nsec = (c % 100) * 10000000;
++    }
++    return 0;
++}
++#endif
+ #include "net.h"
+ #include "xalloc.h"
+ #include "md5-apps.h"
+diff -ruN orig/msmtp-1.8.34/src/net.c msmtp-1.8.34/src/net.c
+--- orig/msmtp-1.8.34/src/net.c	2025-08-10 19:45:03.000000000 +0000
++++ msmtp-1.8.34/src/net.c	2026-11-25 18:09:38.329961138 +0000
+@@ -57,6 +57,8 @@
+ # include <netdb.h>
+ #endif
+ 
++#include "sco-net.h"
++
+ #ifdef HAVE_LIBIDN
+ # include <idn2.h>
+ #endif
+@@ -327,8 +329,9 @@
+ 
+ int net_bind_source_ip_to_socket(int fd, const char *source_ip)
+ {
+-    struct sockaddr_in6 sa6;
+     struct sockaddr_in sa4;
++#ifdef AF_INET6
++    struct sockaddr_in6 sa6;
+ 
+     memset(&sa6, 0, sizeof(sa6));
+     if (inet_pton(AF_INET6, source_ip, &sa6.sin6_addr) != 0)
+@@ -337,6 +340,7 @@
+         return bind(fd, (struct sockaddr *)&sa6, sizeof(sa6));
+     }
+     else
++#endif
+     {
+         memset(&sa4, 0, sizeof(sa4));
+         if (inet_pton(AF_INET, source_ip, &sa4.sin_addr) != 0)
+diff -ruN orig/msmtp-1.8.34/src/sco-net.h msmtp-1.8.34/src/sco-net.h
+--- orig/msmtp-1.8.34/src/sco-net.h	1970-01-01 00:00:00.000000000 +0000
++++ msmtp-1.8.34/src/sco-net.h	2026-11-25 18:10:01.409627156 +0000
+@@ -0,0 +1,5 @@
++/* SCO OpenServer 5 has getaddrinfo() and friends but no socklen_t. */
++#ifndef SCO_NET_H
++#define SCO_NET_H
++typedef int socklen_t;
++#endif
+diff -ruN orig/msmtp-1.8.34/src/tools.c msmtp-1.8.34/src/tools.c
+--- orig/msmtp-1.8.34/src/tools.c	2026-06-05 20:02:06.000000000 +0000
++++ msmtp-1.8.34/src/tools.c	2026-11-25 18:08:45.521730209 +0000
+@@ -50,6 +50,9 @@
+ #include <sys/stat.h>
+ #include <time.h>
+ #include <unistd.h>
++#include <sys/time.h>
++#include <sys/types.h>
++#include <sys/select.h>
+ #ifdef ENABLE_NLS
+ # include <locale.h>
+ #endif
+@@ -745,8 +748,9 @@
+ #ifdef W32_NATIVE
+     Sleep(100);
+ #else /* POSIX */
+-    struct timespec tenth_second = { 0, 100000000 };
+-    nanosleep(&tenth_second, NULL);
++    /* SCO OpenServer 5 has no nanosleep(); select() gives the same pause. */
++    struct timeval tenth_second = { 0, 100000 };
++    select(0, NULL, NULL, NULL, &tenth_second);
+ #endif
+ }
+ 
