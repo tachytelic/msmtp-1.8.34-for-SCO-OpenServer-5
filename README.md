@@ -36,10 +36,12 @@ takes its random numbers from the PRNGD socket at `/etc/egd-pool`. If
 up, there is nothing to do.
 
 **CA bundle.** msmtp checks the mail server's certificate against
-`/usr/local/etc/ssl/cert.pem`, which our
+`/usr/local/etc/ssl/cert.pem` and will not send without that file. Our
 [curl build](https://github.com/tachytelic/curl-7.88.1-for-SCO-OpenServer-5)
-installs. Install curl first and you have both the bundle and the means to
-fetch this binary.
+installs it, so install curl first and you have both the bundle and the means
+to fetch this binary. Check with `ls -l /usr/local/etc/ssl/cert.pem`. If it is
+missing, download [cacert.pem](https://curl.se/ca/cacert.pem) on another
+computer, copy it across and save it under that name.
 
 ## Install
 
