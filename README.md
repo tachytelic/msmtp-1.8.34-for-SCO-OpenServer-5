@@ -28,7 +28,7 @@ and applications that already call `mail` carry on unchanged.
 |---|---|
 | OpenServer 5.0.7 | PRNGD running, and a CA certificate bundle. |
 | OpenServer 5.0.5 | The same, plus OSS646C. Tested on a system set up as in our [OpenSSH guide](https://scoexpert.com/guides/openssh-sco-openserver-5-0-5/). |
-| OpenServer 5.0.6 | Not tested. |
+| OpenServer 5.0.6 | Not run there, but it sits between the two tested releases and should work with OSS646C. |
 
 **PRNGD.** OpenServer has no `/dev/urandom`, so the OpenSSL inside this build
 takes its random numbers from the PRNGD socket at `/etc/egd-pool`. If
