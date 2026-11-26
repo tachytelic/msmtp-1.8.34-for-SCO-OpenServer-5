@@ -115,10 +115,12 @@ users on the SCO system are not affected.
 |---|---|---|
 | TLS handshake with the certificate verified, Gmail and Microsoft 365 | Yes | Yes |
 | Login and send through Gmail, direct and through `mail` | Yes, with the 1.0.2 build below | Yes, with the 1.0.2 build below |
+| Login and send through Gmail with the published binary, PDF and text attachments built by Python | Not run | Yes |
 
-The login and send tests were run with an earlier build of the same source
-linked to OpenSSL 1.0.2. The published binary differs only in being linked to
-OpenSSL 3.5.0, and has passed the handshake test on both releases.
+The first login and send tests were run with an earlier build of the same
+source linked to OpenSSL 1.0.2. The published binary differs only in being
+linked to OpenSSL 3.5.0. It has passed the handshake test on both releases and
+has sent through Gmail on 5.0.7.
 
 Microsoft 365 is turning off password logins for SMTP, so a password in
 msmtp is not a lasting answer there. Use a mail relay service, or a
